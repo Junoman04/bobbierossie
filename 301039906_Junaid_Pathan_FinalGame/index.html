@@ -1,0 +1,255 @@
+<!doctype HTML>
+<head>
+
+    <link rel="stylesheet" href="style.css">
+    
+    <title>Monster DEMOLITION!</title>
+    
+</head>
+
+<body>
+    
+    <h1 id = "Line">Click, hit, score points!</h1> 
+    
+    <canvas id = canvas1 width="128" height = "128"> </canvas>
+    <canvas id = canvas2 width="128" height = "128"> </canvas>
+    <canvas id = canvas3 width="128" height = "128"> </canvas>
+    <canvas id = canvas4 width="128" height = "128"> </canvas>
+    <canvas id = canvas5 width="128" height = "128"> </canvas>
+    
+    <p> </p>
+    
+    <p1>Click on the monster to hit em. <br> Time your hits at the highest point of their jumps to  score more points!</p1>
+    
+</body>
+
+<script>
+    
+    var points = 0;
+    var playerTurns = 0;
+    var highScore = 0;
+    var endGame = false;
+    
+    var monsterNoHitPrompt = ["You hit a tree instead bud...", "Who let you play?", "Woosh goes the loser!", "You should atleast try..."];
+    var monsterAlmostHitPrompt = ["Lol.","The little thing isn't even bothered.", "Still a loser."];
+    var monsterKindaHitPrompt = ["yOu HiT iT", "Try not being trash.", "Your parents failed you.", "People like you make me happy I exist."];
+    var monsterMediumHitPrompt = ["You 'hit' it.", "You hit like a kid tbh.", "I consider going to the gym more often.", "I can do better with my peepee."];
+    var monsterGoodHitPrompt = ["That is a hit indeed.", "Ouuuuu nice one.", "nice.", "You are 'okay' at this game aha."];
+    var monsterGreatHitPrompt = ["Oh Yeah, I am hard.", "*Moans*", "You just BONKED a MF'er."];
+    
+    var monsterThings = [];
+    var playingCanvas = [];
+    var numberOfMonsters = 5;
+    var canvasNumber;
+    var drawingSurfaces = [];
+    var monsterRenderImages = [];
+    
+    var monster=
+        {
+          IMGSRC:"images/monsterTileSheet.png",
+            
+          SIZE:128, 
+          COLUMNS: 3,
+         
+          numOfFrames: 5,    
+          currentFrame:0, 
+            
+          sourceX:0, 
+          sourceY:0, 
+            
+          isForward:true,  
+            
+          HIDING: 0,
+          JUMPING: 1,
+          state: this.HIDING,  
+            
+         waitTime: undefined,
+            
+         calcWaitTime: function()
+            {
+                
+              this.waitTime = Math.ceil(Math.random() * 20);
+                
+            },
+            
+         updateAnimation: function()
+            {   
+                if(this.waitTime> 0 || this.waitTime==undefined)
+                    
+                   this.state=this.HIDING;
+                
+                else this.state = this.JUMPING;
+                
+                    
+                switch(this.state)
+                    {
+                        case this.HIDING:
+                            
+                            this.currentFrame=0; 
+                            this.waitTime--;
+                            break;
+                            
+                        case this.JUMPING:
+                            
+                            if(this.currentFrame==this.numOfFrames) this.isForward=false;
+                            
+                            if(this.currentFrame==0 && !this.isForward)
+                                { 
+                                    this.isForward=true;
+                                    this.calcWaitTime(); 
+                                    this.state=this.HIDING;
+                                    break;
+                                }
+                              
+                if(this.isForward)
+                    
+                    this.currentFrame++;
+                            
+                else this.currentFrame--;
+                
+                    }
+                
+                this.sourceX = (this.currentFrame % this.COLUMNS)*this.SIZE;
+                this.sourceY = Math.floor(this.currentFrame / this.COLUMNS)*this.SIZE;
+               
+            }
+        };
+  
+    for (var i = 0; i < numberOfMonsters; i++)
+        {
+            var monsterCopy = Object.create(monster);
+            monsterThings.push(monsterCopy);
+        }
+
+    for (var j = 1; j < 6; j++)
+        {
+            var canvas = document.getElementById("canvas" +j.toString());
+            playingCanvas.push(canvas);
+        }
+    for (var k = 0; k < 5; k++)
+        {
+            var drawingSurface = playingCanvas[k].getContext("2d");
+            drawingSurfaces.push(drawingSurface);
+        }
+
+    for ( var l = 0; l<5; l++)
+        {
+           var image = new Image();
+           image.addEventListener("load", loadHandler, false);
+           image.src = monsterThings[l].IMGSRC;
+           monsterRenderImages.push(image);
+           //image.id = "monsterImage";
+        }
+    
+    function loadHandler()
+    {
+        monster.calcWaitTime();
+        setInterval(update,300);         
+    }
+        
+        playingCanvas[0].addEventListener("click", function(){GetHit(monsterThings[0]);}, false);
+        playingCanvas[1].addEventListener("click", function(){GetHit(monsterThings[1]);}, false);
+        playingCanvas[2].addEventListener("click", function(){GetHit(monsterThings[2]);}, false);
+        playingCanvas[3].addEventListener("click", function(){GetHit(monsterThings[3]);}, false);
+        playingCanvas[4].addEventListener("click", function(){GetHit(monsterThings[4]);}, false);
+    
+    function update()
+    {
+
+        for (var i = 0; i<5; i++)
+            {
+                 monsterThings[i].updateAnimation();         
+            }
+        
+        if(!endGame)
+            {                
+                render();
+            }           
+    }
+    
+    function render()
+    {
+        for( var i = 0; i<5; i++)
+        {
+            
+            drawingSurfaces[i].clearRect(0,0, canvas.width, canvas.height);
+        
+            drawingSurfaces[i].drawImage(
+            monsterRenderImages[i],
+            monsterThings[i].sourceX, monsterThings[i].sourceY, monsterThings[i].SIZE, monsterThings[i].SIZE,
+            0,0,playingCanvas[i].width,playingCanvas[i].height);
+        }
+    }
+    
+    function GetHit(monsterNumber)
+    {
+        playerTurns++;
+        if(playerTurns<8)
+        {
+         
+          if(monsterNumber.currentFrame == 0)
+            {
+                var toPrint = Math.floor(Math.random()*monsterNoHitPrompt.length);                
+                var pointsToPrint = 0;
+                points += pointsToPrint;
+                document.getElementById("Line").innerHTML = (monsterNoHitPrompt[toPrint] + " You get: " +pointsToPrint +" Points...");
+            }
+          else if(monsterNumber.currentFrame == 1)
+            {
+                var toPrint = Math.floor(Math.random()*monsterAlmostHitPrompt.length);
+                var pointsToPrint = 1;
+                points += pointsToPrint;
+                document.getElementById("Line").innerHTML = (monsterAlmostHitPrompt[toPrint] + " You get: " +pointsToPrint+" Points..");               
+            }
+          else if(monsterNumber.currentFrame == 2)
+            {
+                var toPrint = Math.floor(Math.random()*monsterKindaHitPrompt.length);
+                var pointsToPrint = 2;
+                points += pointsToPrint;
+                document.getElementById("Line").innerHTML = (monsterKindaHitPrompt[toPrint]+ " You get: " +pointsToPrint+" Points.");              
+            }
+          else if(monsterNumber.currentFrame == 3)
+            {
+                var toPrint = Math.floor(Math.random()*monsterMediumHitPrompt.length);
+                var pointsToPrint = 3;
+                points += pointsToPrint;
+                document.getElementById("Line").innerHTML = (monsterMediumHitPrompt[toPrint]+ " You get: " +pointsToPrint+" Points!");               
+            }
+          else if(monsterNumber.currentFrame == 4)
+            {
+                var toPrint = Math.floor(Math.random()*monsterGoodHitPrompt.length);
+                var pointsToPrint = 4;
+                points += pointsToPrint;
+                document.getElementById("Line").innerHTML = (monsterGoodHitPrompt[toPrint]+ " You get: " +pointsToPrint+" Points!!");               
+            }
+          else if(monsterNumber.currentFrame == 5)
+            {
+                var toPrint = Math.floor(Math.random()*monsterGreatHitPrompt.length);
+                var pointsToPrint = 5;
+                points += pointsToPrint;
+                document.getElementById("Line").innerHTML = (monsterGreatHitPrompt[toPrint]+ " You get: " +pointsToPrint+" Points!!!");               
+            }
+            
+        
+            console.log("Current Score: " +points);
+         
+        }
+        else if(playerTurns == 10)
+        {
+            EndGame();
+        }
+    }
+       
+    function EndGame()
+    {
+        endGame = true;
+        for(var i=0; i<5; i++)
+            {
+                drawingSurfaces[i].clearRect(0,0, canvas.width, canvas.height);
+            }
+                document.getElementById("Line").innerHTML = ("No matter what I could've done better. You got " + points + " points");
+    }
+    
+</script>
+        
+    
